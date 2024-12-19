@@ -5,7 +5,6 @@ import com.klainus.web_api_labb_2.model.LoginRequest
 import com.klainus.web_api_labb_2.repository.UserRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
@@ -40,14 +39,16 @@ class UserController @Autowired constructor(
         return ResponseEntity.status(201).body("newUser was created")
     }
 
-    @PostMapping("/api/v1/users")
-    fun loginUser(@Validated @RequestBody loginRequest: LoginRequest): ResponseEntity<String> {
+    @PostMapping("/login")
+    fun loginUser(@Validated @RequestBody loginRequest: LoginRequest): ResponseEntity<Map<String, String>> {
         val user = userRepository.findByUsername(loginRequest.username)
-        return if (user != null && passwordEncoder.matches(loginRequest.password, user.password)) {
-            ResponseEntity.ok("{\"message\": \"Login successful\"}")  // Correct JSON response
+
+        return if (!passwordEncoder.matches(loginRequest.password, user.password)) {
+            ResponseEntity.status(401).body(mapOf("message" to "Invalid username or password"))
         } else {
-            ResponseEntity.status(401).body("{\"message\": \"Invalid username or password\"}")
+            ResponseEntity.ok(mapOf("message" to "Login successful"))
         }
     }
+
 
 }
